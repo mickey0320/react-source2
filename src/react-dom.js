@@ -8,7 +8,7 @@ function render(vdom, container) {
   }
 }
 
-function createDOM(vdom) {
+export function createDOM(vdom) {
   const { type, props } = vdom;
   let dom;
   if (type === React_Text) {
@@ -30,7 +30,7 @@ function createDOM(vdom) {
       : [props.children];
     children.forEach((childVdom) => render(childVdom, dom));
   }
-
+  vdom.dom = dom
   return dom;
 }
 
@@ -53,6 +53,7 @@ function mountClassComponent(vdom) {
   const { type, props } = vdom;
   const classInstance = new type(props);
   const oldRenderVdom = classInstance.render();
+  classInstance.oldRenderVdom = oldRenderVdom
 
   return createDOM(oldRenderVdom);
 }
@@ -62,6 +63,19 @@ function mountFunctionComponent(vdom) {
   const oldRenderVdom = type(props);
 
   return createDOM(oldRenderVdom);
+}
+
+export function findDOM(vdom){
+  if(vdom.dom){
+    return vdom.dom
+  } else {
+    return findDOM(vdom.oldRenderVdom)
+  }
+}
+
+export const compareTwoVdom = (dom,oldVdom, newVdom) => {
+  const newDOM = createDOM(newVdom)
+  dom.parentNode.replaceChild(newDOM, dom)
 }
 
 const ReactDOM = {

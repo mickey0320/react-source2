@@ -1,3 +1,5 @@
+import {findDOM, compareTwoVdom} from './react-dom'
+
 export const updateQueue = {
   updaters: new Set(),
   isBatchingUpdate: false,
@@ -14,6 +16,13 @@ export class Component {
   setState(partialState) {
     this.updater.addState(partialState);
   }
+  forceUpdate(){
+    const classInstance = this
+    const oldDOM = findDOM(classInstance.oldRenderVdom)
+    const oldRenderVdom = classInstance.render()
+    compareTwoVdom(oldDOM, classInstance.oldRenderVdom, oldRenderVdom)
+    classInstance.oldRenderVdom = oldRenderVdom
+  }
 }
 
 class Updater {
@@ -23,16 +32,20 @@ class Updater {
   }
   addState(partialState) {
     this.pendingStates.push(partialState)
-    this.updateComponent()
+    this.emitUpdate()
   }
-  updateComponent() {
+  emitUpdate(){
     if (updateQueue.isBatchingUpdate) {
       updateQueue.updaters.add(this);
     } else {
+      this.updateComponent()
     }
   }
+  updateComponent() {
+    shouldComponent(this.classInstance, this.getState())
+  }
   getState() {
-    const state = this.classInstance;
+    const {state} = this.classInstance;
     const newState = { ...state };
     this.pendingStates.forEach((pendingState) => {
       if (typeof pendingState === "function") {
@@ -43,6 +56,11 @@ class Updater {
 
     return newState;
   }
+}
+
+function shouldComponent(classInstance, newState){
+  classInstance.state = newState
+  classInstance.forceUpdate()
 }
 
 export default Component;

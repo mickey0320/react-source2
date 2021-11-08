@@ -1,3 +1,5 @@
+import { updateQueue } from "./Component";
+
 function addEvent(dom, type, handler) {
   const store = dom.store || (dom.store = {});
   store[type] = handler;
@@ -8,6 +10,7 @@ function addEvent(dom, type, handler) {
 function dispatchEvent(e) {
   let target = e.target;
   const type = e.type;
+  updateQueue.isBatchingUpdate = true
   while (target) {
     const store = target.store;
     if (store) {
@@ -18,6 +21,8 @@ function dispatchEvent(e) {
     }
     target = target.parentNode;
   }
+  updateQueue.batchUpdate()
+  updateQueue.isBatchingUpdate = false
 }
 
 export default addEvent;

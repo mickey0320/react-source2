@@ -5,11 +5,24 @@ import ReactDOM from "./react-dom";
 //   return <div>{props.msg}</div>;
 // }
 class App extends React.Component {
+  state = {
+    count: 0
+  }
   handleClick = () => {
-    console.log("click");
+    this.setState((previousState) => {
+      return {
+        count: previousState.count + 1
+      }
+    })
+    this.setState((previousState) => {
+      return {
+        count: previousState.count + 1
+      }
+    })
+    
   };
   render() {
-    return <div onClick={this.handleClick}>{this.props.msg}</div>;
+    return <div onClick={this.handleClick}>{this.state.count}</div>;
   }
 }
-ReactDOM.render(<App msg="class component" />, document.getElementById("root"));
+ReactDOM.render(<App />, document.getElementById("root"));
