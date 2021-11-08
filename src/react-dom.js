@@ -1,4 +1,4 @@
-import { React_Text } from "./constants";
+import { React_Forward, React_Text } from "./constants";
 import addEvent from './event'
 
 function render(vdom, container) {
@@ -9,7 +9,7 @@ function render(vdom, container) {
 }
 
 export function createDOM(vdom) {
-  const { type, props } = vdom;
+  const { type, props, ref } = vdom;
   let dom;
   if (type === React_Text) {
     dom = document.createTextNode(props.content);
@@ -17,6 +17,8 @@ export function createDOM(vdom) {
   } else if (typeof type === "string") {
     dom = document.createElement(type);
     updateProps(dom, {}, props);
+  } else if(type.$$typeof === React_Forward){
+    return mountForwardComponent(vdom)
   } else if (typeof type === "function") {
     if (type.isReact) {
       return mountClassComponent(vdom);
@@ -31,6 +33,9 @@ export function createDOM(vdom) {
     children.forEach((childVdom) => render(childVdom, dom));
   }
   vdom.dom = dom
+  if(ref) {
+    ref.current = dom
+  }
   return dom;
 }
 
@@ -50,10 +55,13 @@ function updateProps(dom, oldProps, newProps) {
 }
 
 function mountClassComponent(vdom) {
-  const { type, props } = vdom;
+  const { type, props, ref } = vdom;
   const classInstance = new type(props);
   const oldRenderVdom = classInstance.render();
   classInstance.oldRenderVdom = oldRenderVdom
+  if(ref){
+    ref.current = classInstance
+  }
 
   return createDOM(oldRenderVdom);
 }
@@ -63,6 +71,13 @@ function mountFunctionComponent(vdom) {
   const oldRenderVdom = type(props);
 
   return createDOM(oldRenderVdom);
+}
+
+function mountForwardComponent(vdom){
+  const {ref, type, props} = vdom
+  const oldRenderVdom = type.render(props, ref)
+
+  return createDOM(oldRenderVdom)
 }
 
 export function findDOM(vdom){
