@@ -1,10 +1,13 @@
 import { React_Forward, React_Text } from "./constants";
-import addEvent from './event'
+import addEvent from "./event";
 
 function render(vdom, container) {
   const dom = createDOM(vdom);
   if (container) {
     container.appendChild(dom);
+    if (dom._componentDidMount) {
+      dom._componentDidMount();
+    }
   }
 }
 
@@ -17,8 +20,8 @@ export function createDOM(vdom) {
   } else if (typeof type === "string") {
     dom = document.createElement(type);
     updateProps(dom, {}, props);
-  } else if(type.$$typeof === React_Forward){
-    return mountForwardComponent(vdom)
+  } else if (type.$$typeof === React_Forward) {
+    return mountForwardComponent(vdom);
   } else if (typeof type === "function") {
     if (type.isReact) {
       return mountClassComponent(vdom);
@@ -30,11 +33,13 @@ export function createDOM(vdom) {
     const children = Array.isArray(props.children)
       ? props.children
       : [props.children];
-    children.forEach((childVdom) => render(childVdom, dom));
+    children.forEach((childVdom) => {
+      render(childVdom, dom);
+    });
   }
-  vdom.dom = dom
-  if(ref) {
-    ref.current = dom
+  vdom.dom = dom;
+  if (ref) {
+    ref.current = dom;
   }
   return dom;
 }
@@ -47,7 +52,7 @@ function updateProps(dom, oldProps, newProps) {
         dom.style[key] = newProps.style[key];
       }
     } else if (prop.startsWith("on")) {
-        addEvent(dom, prop.toLocaleLowerCase(), newProps[prop])
+      addEvent(dom, prop.toLocaleLowerCase(), newProps[prop]);
     } else {
       dom.setAttribute(prop, newProps[prop]);
     }
@@ -57,41 +62,50 @@ function updateProps(dom, oldProps, newProps) {
 function mountClassComponent(vdom) {
   const { type, props, ref } = vdom;
   const classInstance = new type(props);
+  if (classInstance.componentWillMount) {
+    classInstance.componentWillMount();
+  }
   const oldRenderVdom = classInstance.render();
-  classInstance.oldRenderVdom = oldRenderVdom
-  if(ref){
-    ref.current = classInstance
+  vdom.oldRenderVdom = classInstance.oldRenderVdom = oldRenderVdom;
+  if (ref) {
+    ref.current = classInstance;
   }
 
-  return createDOM(oldRenderVdom);
+  const dom = createDOM(oldRenderVdom);
+  if (classInstance.componentDidMount) {
+    dom._componentDidMount =
+      classInstance.componentDidMount.bind(classInstance);
+  }
+  return dom
 }
 
 function mountFunctionComponent(vdom) {
   const { type, props } = vdom;
   const oldRenderVdom = type(props);
+  vdom.oldRenderVdom = oldRenderVdom
 
   return createDOM(oldRenderVdom);
 }
 
-function mountForwardComponent(vdom){
-  const {ref, type, props} = vdom
-  const oldRenderVdom = type.render(props, ref)
+function mountForwardComponent(vdom) {
+  const { ref, type, props } = vdom;
+  const oldRenderVdom = type.render(props, ref);
 
-  return createDOM(oldRenderVdom)
+  return createDOM(oldRenderVdom);
 }
 
-export function findDOM(vdom){
-  if(vdom.dom){
-    return vdom.dom
+export function findDOM(vdom) {
+  if (vdom.dom) {
+    return vdom.dom;
   } else {
-    return findDOM(vdom.oldRenderVdom)
+    return findDOM(vdom.oldRenderVdom);
   }
 }
 
-export const compareTwoVdom = (dom,oldVdom, newVdom) => {
-  const newDOM = createDOM(newVdom)
-  dom.parentNode.replaceChild(newDOM, dom)
-}
+export const compareTwoVdom = (dom, oldVdom, newVdom) => {
+  const newDOM = createDOM(newVdom);
+  dom.parentNode.replaceChild(newDOM, dom);
+};
 
 const ReactDOM = {
   render,

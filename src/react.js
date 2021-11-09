@@ -1,9 +1,11 @@
 import { Component } from "./Component";
 import { wrapToVdom } from "./util";
-import {React_Forward} from './constants'
+import { React_Forward } from "./constants";
 
 function createElement(type, options = {}, ...children) {
   const { ref, key, ...props } = options;
+  delete props.__self;
+  delete props.__source;
   if (children.length > 1) {
     props.children = children.map(wrapToVdom);
   } else if (children.length === 1) {
@@ -19,24 +21,24 @@ function createElement(type, options = {}, ...children) {
   };
 }
 
-function createRef(){
+function createRef() {
   return {
-    current: null
-  }
+    current: null,
+  };
 }
 
-function forwardRef(render){
+function forwardRef(render) {
   return {
     $$typeof: React_Forward,
-    render
-  }
+    render,
+  };
 }
 
 const React = {
   createElement,
   Component,
   createRef,
-  forwardRef
+  forwardRef,
 };
 
 export default React;

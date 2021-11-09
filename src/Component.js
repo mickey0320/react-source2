@@ -21,6 +21,9 @@ export class Component {
     const oldDOM = findDOM(classInstance.oldRenderVdom)
     const oldRenderVdom = classInstance.render()
     compareTwoVdom(oldDOM, classInstance.oldRenderVdom, oldRenderVdom)
+    if(classInstance.componentDidUpdate){
+      classInstance.componentDidUpdate()
+    }
     classInstance.oldRenderVdom = oldRenderVdom
   }
 }
@@ -60,6 +63,9 @@ class Updater {
 
 function shouldComponent(classInstance, newState){
   classInstance.state = newState
+  if(classInstance.componentWillUpdate){
+    classInstance.componentWillUpdate()
+  }
   classInstance.forceUpdate()
 }
 

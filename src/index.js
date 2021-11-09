@@ -1,43 +1,57 @@
 import React from "./react";
 import ReactDOM from "./react-dom";
 
-// function App(props) {
-//   return <div>{props.msg}</div>;
+// class Counter extends React.Component {
+//   componentWillMount() {
+//     console.log("Counter componentWillMount");
+//   }
+//   componentDidMount() {
+//     console.log("Counter componentDidMount");
+//   }
+//   render() {
+//     console.log("Counter render");
+//     return <span>counter</span>;
+//   }
 // }
-function InputComponent(props, ref){
-  return (
-    <input ref={ref} />
-  )
+
+// class App extends React.Component {
+//   componentWillMount() {
+//     console.log("App componentWillMount");
+//   }
+//   componentDidMount() {
+//     console.log("App componentDidMount");
+//   }
+//   render() {
+//     console.log("App render");
+//     return (
+//       <div>
+//         <Counter />
+//       </div>
+//     );
+//   }
+// }
+
+class Three extends React.Component {
+  render() {
+    return <div>three</div>
+  }
 }
-const InputComponentForward = React.forwardRef(InputComponent)
-class App extends React.Component {
+ 
+function Two(){
+  return <Three />;
+}
+class App extends React.Component{
+  state = {count: 0}
   constructor(props){
     super(props)
-    this.inputRef = React.createRef()
-    setTimeout(() =>{
-      this.inputRef.current.focus()
-    }, 1000)
-  }
-  state = {
-    count: 0
-  }
-  handleClick = () => {
-    this.setState((previousState) => {
-      return {
-        count: previousState.count + 1
-      }
+    setTimeout(() => {
+      this.setState({
+        count: 10
+      })
     })
-    this.setState((previousState) => {
-      return {
-        count: previousState.count + 1
-      }
-    })
-  };
-  render() {
-    return <div onClick={this.handleClick}>
-     <span>{this.state.count}</span> 
-     <InputComponentForward ref={this.inputRef} />
-    </div>;
+  }
+  render(){
+    return <Two/>
   }
 }
 ReactDOM.render(<App />, document.getElementById("root"));
