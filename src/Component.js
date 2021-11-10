@@ -1,4 +1,4 @@
-import {findDOM, compareTwoVdom} from './react-dom'
+import { findDOM, compareTwoVdom } from "./react-dom";
 
 export const updateQueue = {
   updaters: new Set(),
@@ -16,15 +16,19 @@ export class Component {
   setState(partialState) {
     this.updater.addState(partialState);
   }
-  forceUpdate(){
-    const classInstance = this
-    const oldDOM = findDOM(classInstance.oldRenderVdom)
-    const oldRenderVdom = classInstance.render()
-    compareTwoVdom(oldDOM, classInstance.oldRenderVdom, oldRenderVdom)
-    if(classInstance.componentDidUpdate){
-      classInstance.componentDidUpdate()
+  forceUpdate() {
+    const classInstance = this;
+    const oldDOM = findDOM(classInstance.oldRenderVdom);
+    const newRenderVdom = classInstance.render();
+    compareTwoVdom(
+      oldDOM.parentNode,
+      classInstance.oldRenderVdom,
+      newRenderVdom
+    );
+    classInstance.oldRenderVdom = newRenderVdom;
+    if (classInstance.componentDidUpdate) {
+      classInstance.componentDidUpdate(this.props, this.state);
     }
-    classInstance.oldRenderVdom = oldRenderVdom
   }
 }
 
@@ -34,21 +38,23 @@ class Updater {
     this.pendingStates = [];
   }
   addState(partialState) {
-    this.pendingStates.push(partialState)
-    this.emitUpdate()
+    this.pendingStates.push(partialState);
+    this.emitUpdate();
   }
-  emitUpdate(){
+  emitUpdate(nextProps) {
+    this.nextProps = nextProps;
     if (updateQueue.isBatchingUpdate) {
       updateQueue.updaters.add(this);
     } else {
-      this.updateComponent()
+      this.updateComponent();
     }
   }
   updateComponent() {
-    shouldComponent(this.classInstance, this.getState())
+    const { classInstance, nextProps } = this;
+    shouldComponent(classInstance, nextProps, this.getState());
   }
   getState() {
-    const {state} = this.classInstance;
+    const { state } = this.classInstance;
     const newState = { ...state };
     this.pendingStates.forEach((pendingState) => {
       if (typeof pendingState === "function") {
@@ -61,12 +67,22 @@ class Updater {
   }
 }
 
-function shouldComponent(classInstance, newState){
-  classInstance.state = newState
-  if(classInstance.componentWillUpdate){
-    classInstance.componentWillUpdate()
+function shouldComponent(classInstance, newProps, newState) {
+  let willUpdate = true;
+  if (
+    classInstance.shouldComponentUpdate &&
+    !classInstance.shouldComponentUpdate()
+  ) {
+    willUpdate = false;
   }
-  classInstance.forceUpdate()
+  if (willUpdate && classInstance.componentWillUpdate) {
+    classInstance.componentWillUpdate();
+  }
+  classInstance.state = newState;
+  classInstance.props = newProps;
+  if (willUpdate) {
+    classInstance.forceUpdate();
+  }
 }
 
 export default Component;
