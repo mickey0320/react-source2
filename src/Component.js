@@ -19,6 +19,12 @@ export class Component {
   forceUpdate() {
     const classInstance = this;
     const oldDOM = findDOM(classInstance.oldRenderVdom);
+    if (classInstance.constructor.getDerivedStateFromProps) {
+      const newState = classInstance.constructor.getDerivedStateFromProps(this.props)
+      if (newState) {
+        Object.assign(this.state, newState)
+      }
+    }
     const newRenderVdom = classInstance.render();
     compareTwoVdom(
       oldDOM.parentNode,
@@ -26,8 +32,12 @@ export class Component {
       newRenderVdom
     );
     classInstance.oldRenderVdom = newRenderVdom;
+    let snapshot
+    if (classInstance.getSnapshotBeforeUpdate) {
+      snapshot = classInstance.getSnapshotBeforeUpdate()
+    }
     if (classInstance.componentDidUpdate) {
-      classInstance.componentDidUpdate(this.props, this.state);
+      classInstance.componentDidUpdate(this.props, this.state, snapshot);
     }
   }
 }
