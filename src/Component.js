@@ -51,7 +51,9 @@ class Updater {
   }
   updateComponent() {
     const { classInstance, nextProps } = this;
-    shouldComponent(classInstance, nextProps, this.getState());
+    if (nextProps || this.pendingStates.length > 0) {
+      shouldComponent(classInstance, nextProps, this.getState());
+    }
   }
   getState() {
     const { state } = this.classInstance;
@@ -71,7 +73,7 @@ function shouldComponent(classInstance, newProps, newState) {
   let willUpdate = true;
   if (
     classInstance.shouldComponentUpdate &&
-    !classInstance.shouldComponentUpdate()
+    !classInstance.shouldComponentUpdate(newProps, newState)
   ) {
     willUpdate = false;
   }

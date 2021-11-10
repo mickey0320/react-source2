@@ -191,20 +191,19 @@ function unmountNode(vdom) {
       : [props.children];
     children.forEach(unmountNode);
   }
-  const dom = findDOM(vdom);
+  const dom = findDOM(vdom.classInstance.oldRenderVdom);
   dom.parentNode.removeChild(dom);
 }
 
 function mountNode(parentNode, oldVdom, newVdom, nextDOM) {
-  const classInstance = oldVdom.classInstance;
   const newDOM = createDOM(newVdom);
   if (nextDOM) {
     parentNode.insertBefore(newDOM, nextDOM);
   } else {
     parentNode.appendChild(newDOM);
   }
-  if (classInstance.componentDidMount) {
-    classInstance.componentDidMount();
+  if (newDOM._componentDidMount) {
+    newDOM._componentDidMount()
   }
 }
 

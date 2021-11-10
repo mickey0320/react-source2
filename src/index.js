@@ -8,6 +8,9 @@ class Counter extends React.Component {
   componentDidMount() {
     console.log("Counter componentDidMount");
   }
+  componentWillUnmount() {
+    console.log("Counter componentWillUnmount");
+  }
   render() {
     return <span>{this.props.count}</span>;
   }
@@ -23,6 +26,10 @@ class App extends React.Component {
   componentDidMount() {
     console.log("App componentDidMount");
   }
+  shouldComponentUpdate(nextProps, nextState){
+    console.log("App shouldComponentUpdate");
+    return nextState.count % 2 === 0;
+  }
   handleClick = () => {
     this.setState({
       count: this.state.count + 1,
@@ -33,7 +40,7 @@ class App extends React.Component {
     return (
       <div>
         <p>{this.state.count}</p>
-        <Counter count={this.state.count} />
+        {this.state.count === 4 ? null : <Counter count={this.state.count} />}
         <button onClick={this.handleClick}>点击+1</button>
       </div>
     );
