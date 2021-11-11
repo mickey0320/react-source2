@@ -1,4 +1,9 @@
-import { React_Forward, React_Text } from "./constants";
+import {
+  React_Context,
+  React_Forward,
+  React_Provider,
+  React_Text,
+} from "./constants";
 import addEvent from "./event";
 
 function render(vdom, container) {
@@ -21,6 +26,8 @@ export function createDOM(vdom) {
     updateProps(dom, {}, props);
   } else if (type.$$typeof === React_Forward) {
     return mountForwardComponent(vdom);
+  } else if (type.$$typeof === React_Provider) {
+    return mountReactProviderComponent(vdom);
   } else if (typeof type === "function") {
     if (type.isReact) {
       return mountClassComponent(vdom);
@@ -61,6 +68,9 @@ function updateProps(dom, oldProps, newProps) {
 function mountClassComponent(vdom) {
   const { type, props, ref } = vdom;
   const classInstance = new type(props);
+  if (type.contextType) {
+    classInstance.context = type.contextType._value;
+  }
   vdom.classInstance = classInstance;
   if (classInstance.componentWillMount) {
     classInstance.componentWillMount();
@@ -94,8 +104,16 @@ function mountForwardComponent(vdom) {
   return createDOM(oldRenderVdom);
 }
 
+function mountReactProviderComponent(vdom) {
+  const { type, props } = vdom;
+  type._context._value = props.value;
+  vdom.oldRenderVdom = props.children;
+
+  return createDOM(props.children);
+}
+
 export function findDOM(vdom) {
-  if(!vdom) return null
+  if (!vdom) return null;
   if (vdom.dom) {
     return vdom.dom;
   } else {
@@ -128,6 +146,8 @@ function updateElement(oldVdom, newVdom) {
     const currentDOM = (newVdom.dom = findDOM(oldVdom));
     updateProps(currentDOM, oldVdom.props, newVdom.props);
     updateChildren(currentDOM, oldVdom.props.children, newVdom.props.children);
+  } else if (oldVdom.type.$$typeof === React_Provider) {
+    updateReactProviderComponent(oldVdom, newVdom);
   } else if (typeof oldVdom.type === "function") {
     if (oldVdom.type.isReact) {
       updateClassComponent(oldVdom, newVdom);
@@ -135,6 +155,16 @@ function updateElement(oldVdom, newVdom) {
       updateFunctionComponent(oldVdom, newVdom);
     }
   }
+}
+
+function updateReactProviderComponent(oldVdom, newVdom) {
+  const { type, props } = newVdom;
+  const dom = newVdom.dom = findDOM(oldVdom);
+  type._context._value = props.value;
+  const oldRenderVdom = oldVdom.oldRenderVdom;
+  const newRenderVdom = props.children;
+
+  compareTwoVdom(dom.parentNode, oldRenderVdom, newRenderVdom);
 }
 
 function updateClassComponent(oldVdom, newVdom) {
@@ -203,7 +233,7 @@ function mountNode(parentNode, oldVdom, newVdom, nextDOM) {
     parentNode.appendChild(newDOM);
   }
   if (newDOM._componentDidMount) {
-    newDOM._componentDidMount()
+    newDOM._componentDidMount();
   }
 }
 

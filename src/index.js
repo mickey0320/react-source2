@@ -1,48 +1,46 @@
 import React from "./react";
 import ReactDOM from "./react-dom";
 
-class Counter extends React.Component {
-  componentWillMount() {
-    console.log("Counter componentWillMount");
-  }
-  componentDidMount() {
-    console.log("Counter componentDidMount");
-  }
-  componentWillUnmount() {
-    console.log("Counter componentWillUnmount");
-  }
+import PersonContext from "./personContext";
+
+class Child1 extends React.Component {
+  static contextType = PersonContext;
   render() {
-    return <span>{this.props.count}</span>;
+    return (
+      <div>
+        <p>child1:{this.context.name}</p>
+        {this.props.children}
+      </div>
+    );
+  }
+}
+
+class Child11 extends React.Component {
+  static contextType = PersonContext;
+  render() {
+    return <p>child2:{this.context.name}</p>;
   }
 }
 
 class App extends React.Component {
   state = {
-    count: 0,
+    name: "yanjian",
   };
-  componentWillMount() {
-    console.log("App componentWillMount");
-  }
-  componentDidMount() {
-    console.log("App componentDidMount");
-  }
-  shouldComponentUpdate(nextProps, nextState){
-    console.log("App shouldComponentUpdate");
-    return nextState.count % 2 === 0;
-  }
   handleClick = () => {
     this.setState({
-      count: this.state.count + 1,
+      name: "yanjian" + Math.random(),
     });
   };
   render() {
-    console.log("App render");
     return (
-      <div>
-        <p>{this.state.count}</p>
-        {this.state.count === 4 ? null : <Counter count={this.state.count} />}
-        <button onClick={this.handleClick}>点击+1</button>
-      </div>
+      <PersonContext.Provider value={{ name: this.state.name }}>
+        <div>
+          <button onClick={this.handleClick}>改变</button>
+          <Child1>
+            <Child11 />
+          </Child1>
+        </div>
+      </PersonContext.Provider>
     );
   }
 }
