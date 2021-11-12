@@ -19,6 +19,9 @@ export class Component {
   forceUpdate() {
     const classInstance = this;
     const oldDOM = findDOM(classInstance.oldRenderVdom);
+    if(classInstance.constructor.contextType){
+     this.context = classInstance.constructor.contextType._value
+    }
     if (classInstance.constructor.getDerivedStateFromProps) {
       const newState = classInstance.constructor.getDerivedStateFromProps(this.props)
       if (newState) {

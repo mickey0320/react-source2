@@ -161,10 +161,9 @@ function updateReactProviderComponent(oldVdom, newVdom) {
   const { type, props } = newVdom;
   const dom = newVdom.dom = findDOM(oldVdom);
   type._context._value = props.value;
-  const oldRenderVdom = oldVdom.oldRenderVdom;
   const newRenderVdom = props.children;
-
-  compareTwoVdom(dom.parentNode, oldRenderVdom, newRenderVdom);
+  compareTwoVdom(dom, oldVdom.oldRenderVdom, newRenderVdom);
+  newVdom.oldRenderVdom = newRenderVdom
 }
 
 function updateClassComponent(oldVdom, newVdom) {
