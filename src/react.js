@@ -1,11 +1,21 @@
 import { Component } from "./Component";
 import { wrapToVdom, shallowEqual } from "./util";
+
 import {
   React_Context,
   React_Forward,
   React_Memo,
   React_Provider,
 } from "./constants";
+import {
+  useState,
+  useReducer,
+  useMemo,
+  useRef,
+  useCallback,
+  useContext,
+  useEffect,
+} from "./react-dom";
 
 function createElement(type, options = {}, ...children) {
   const { ref, key, ...props } = options;
@@ -75,6 +85,13 @@ const React = {
   createContext,
   PureComponent,
   memo,
+  useState,
+  useReducer,
+  useMemo,
+  useRef,
+  useCallback,
+  useContext,
+  useEffect,
 };
 
 export default React;

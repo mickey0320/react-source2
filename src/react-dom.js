@@ -7,7 +7,19 @@ import {
 } from "./constants";
 import addEvent from "./event";
 
+let hookStates = [];
+let hookIndex = 0;
+let scheduleUpdate;
+
 function render(vdom, container) {
+  mount(vdom, container);
+  scheduleUpdate = () => {
+    compareTwoVdom(container, vdom, vdom);
+    hookIndex = 0;
+  };
+}
+
+function mount(vdom, container) {
   const dom = createDOM(vdom);
   if (container) {
     container.appendChild(dom);
@@ -263,6 +275,109 @@ function mountNode(parentNode, oldVdom, newVdom, nextDOM) {
   }
   if (newDOM._componentDidMount) {
     newDOM._componentDidMount();
+  }
+}
+
+// export function useState(initialState) {
+//   if (hookStates[hookIndex] === undefined) {
+//     hookStates[hookIndex] = initialState;
+//   }
+//   const currentIndex = hookIndex;
+//   function setState(newState) {
+//     hookStates[currentIndex] = newState;
+//     scheduleUpdate();
+//   }
+
+//   return [hookStates[hookIndex++], setState];
+// }
+
+export function useState(initialState) {
+  return useReducer(null, initialState);
+}
+
+export function useReducer(reducer, initialState) {
+  if (hookStates[hookIndex] === undefined) {
+    hookStates[hookIndex] = initialState;
+  }
+  const currentIndex = hookIndex;
+
+  function dispatch(action) {
+    const newState = reducer
+      ? reducer(hookStates[currentIndex], action)
+      : action;
+    hookStates[currentIndex] = newState;
+    scheduleUpdate();
+  }
+
+  return [hookStates[hookIndex++], dispatch];
+}
+
+export function useMemo(factory, deps) {
+  if (hookStates[hookIndex] === undefined) {
+    hookStates[hookIndex] = [factory(), deps];
+  } else {
+    const oldDeps = hookStates[hookIndex][1];
+    for (let i = 0; i < deps.length; i++) {
+      if (oldDeps[i] !== deps[i]) {
+        hookStates[hookIndex][0] = factory();
+        hookStates[hookIndex][1] = deps;
+        continue;
+      }
+    }
+  }
+
+  return hookStates[hookIndex++][0];
+}
+
+export function useRef(value) {
+  if (hookStates[hookIndex] === undefined) {
+    hookStates[hookIndex] = { current: value };
+  }
+
+  return hookStates[hookIndex++];
+}
+
+export function useCallback(callback, deps) {
+  if (hookStates[hookIndex] === undefined) {
+    hookStates[hookIndex] = [callback, deps];
+  } else {
+    const oldDeps = hookStates[hookIndex][1];
+    for (let i = 0; i < deps.length; i++) {
+      if (oldDeps[i] !== deps[i]) {
+        hookStates[hookIndex][0] = callback;
+        hookStates[hookIndex][1] = deps;
+      }
+    }
+  }
+
+  return hookStates[hookIndex++][0];
+}
+
+export function useContext(context) {
+  return context.value;
+}
+
+export function useEffect(callback, deps) {
+  const currentIndex = hookIndex
+  if (hookStates[hookIndex] === undefined) {
+    setTimeout(() => {
+      hookStates[currentIndex] = [callback(), deps];
+    });
+    hookIndex++
+  } else {
+    const [lastDestroy, lastDeps] = hookStates[hookIndex];
+    const isSame = lastDeps && lastDeps.every((dep, i) => dep === deps[i]);
+    if (!isSame) {
+      if (lastDestroy) {
+        lastDestroy();
+      }
+      setTimeout(() => {
+        hookStates[currentIndex] = [callback(), deps];
+      });
+      hookIndex++
+    } else {
+      hookIndex++;
+    }
   }
 }
 
