@@ -1,6 +1,11 @@
 import { Component } from "./Component";
-import { wrapToVdom } from "./util";
-import { React_Context, React_Forward, React_Provider } from "./constants";
+import { wrapToVdom, shallowEqual } from "./util";
+import {
+  React_Context,
+  React_Forward,
+  React_Memo,
+  React_Provider,
+} from "./constants";
 
 function createElement(type, options = {}, ...children) {
   const { ref, key, ...props } = options;
@@ -48,12 +53,28 @@ function createContext() {
   return context;
 }
 
+class PureComponent extends Component {
+  shouldComponentUpdate(nextProps, nextState) {
+    return !shallowEqual(nextProps, this.props);
+  }
+}
+
+function memo(component, compare = shallowEqual) {
+  return {
+    $$typeof: React_Memo,
+    compare,
+    component,
+  };
+}
+
 const React = {
   createElement,
   Component,
   createRef,
   forwardRef,
   createContext,
+  PureComponent,
+  memo,
 };
 
 export default React;

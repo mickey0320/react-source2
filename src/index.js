@@ -1,46 +1,37 @@
 import React from "./react";
 import ReactDOM from "./react-dom";
 
-import PersonContext from "./personContext";
-
-class Child1 extends React.Component {
-  static contextType = PersonContext;
-  render() {
-    return (
-      <div>
-        <p>child1:{this.context.name}</p>
-        {this.props.children}
-      </div>
-    );
-  }
+// class Counter extends React.PureComponent {
+//   render() {
+//     console.log("counter render");
+//     return <div>{this.props.count}</div>;
+//   }
+// }
+function Counter(props) {
+  console.log('counter render')
+  return <div>{props.count}</div>;
 }
-
-class Child11 extends React.Component {
-  static contextType = PersonContext;
-  render() {
-    return <p>child2:{this.context.name}</p>;
-  }
-}
-
+const CounterMemo = React.memo(Counter)
 class App extends React.Component {
+  constructor(props) {
+    super(props);
+    this.inputRef = React.createRef();
+  }
   state = {
-    name: "yanjian",
+    count: 0,
   };
   handleClick = () => {
     this.setState({
-      name: "yanjian" + Math.random(),
+      count: this.state.count + Number(this.inputRef.current.value),
     });
   };
   render() {
     return (
-      <PersonContext.Provider value={{ name: this.state.name }}>
-        <div>
-          <button onClick={this.handleClick}>改变</button>
-          <Child1>
-            <Child11 />
-          </Child1>
-        </div>
-      </PersonContext.Provider>
+      <div>
+        <input type="text" value="0" ref={this.inputRef} />
+        <CounterMemo count={this.state.count} />
+        <button onClick={this.handleClick}>计算</button>
+      </div>
     );
   }
 }
